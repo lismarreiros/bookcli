@@ -160,6 +160,43 @@ function updateBook() {
   });
 };
 
+function deleteBook() {
+  inquirer.prompt([
+    {
+      type: 'input',
+      name: 'id',
+      message: 'Enter the ID of the book you want to delete:',
+      validate: function (value) {
+        return /^\d+$/.test(value) ? true : 'Please enter a valid ID number';
+      },  
+    }
+  ]).then((idChoice) => {
+    const id = parseInt(idChoice.id);
+    
+    // Check if the book exists before attempting to delete
+    db.get('SELECT * FROM books WHERE id = ?', [id], (err, row) => {
+      if (err) {
+        console.error(err.message);
+        return promptMainMenu();
+      }
+      if (!row) {
+        console.log(chalk.red.bold(`No book found with ID ${id}.`));
+        return promptMainMenu();
+      }
+
+      // Proceed with deletion if the book exists
+      db.run(`DELETE FROM books WHERE id = ?`, [id], function (err) {
+        if (err) {
+          console.error(err.message);
+          return promptMainMenu();
+        }
+        console.log(chalk.yellow.bold(`Book with ID ${id} has been deleted. Rows affected: ${this.changes}.`));
+        promptMainMenu();
+      });
+    });
+  });
+}
+
 // Define the main function that prompts the main menu to the user
 function promptMainMenu() {
   inquirer.prompt([
@@ -167,7 +204,7 @@ function promptMainMenu() {
     type: 'list',
     name: 'choice',
     message: 'What would you like to do?',
-    choices : ['View all books', 'Update book', 'Add a new book', 'Exit']
+    choices : ['View all books', 'Update book', 'Add a new book', 'Delete a book', 'Exit']
     },
   ])
 
@@ -181,6 +218,9 @@ function promptMainMenu() {
         break;
       case 'Add a new book':
         addBook();
+        break;
+      case 'Delete a book':
+        deleteBook();
         break;
       case 'Exit':
         console.log(chalk.bgMagentaBright.bold('Thank you for using our software!'))
