@@ -86,11 +86,20 @@ async function addBook() {
 // Function to view all books
 function viewAllBooks() {
   db.all('SELECT * FROM books', (err, rows) => {
-    if (err) console.error(err.message);
+    if (err){
+      console.error(err.message);
+      return promptMainMenu()
+    }
+
+    const formattedRows = rows.map(row => ({
+      'ID': row.id,
+      'Book Title': row.name,
+      'Author Name': row.author,
+      'Rating (Stars)': row.stars
+    }));
+
     console.log(chalk.yellow.bold('All books: '));
-    rows.forEach((row) =>{
-      console.log(`ID: ${row.id}, Name: ${row.name}, Author: ${row.author}, Stars: ${row.stars}`);
-    });
+    console.table(formattedRows)
     promptMainMenu();
   });
 }
