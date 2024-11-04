@@ -14,8 +14,8 @@ db.run(`
   CREATE TABLE IF NOT EXISTS books (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
-  author INTEGER NOT NULL,
-  stars INTEGER NOT NULL
+  author TEXT NOT NULL,
+  stars REAL NOT NULL
 )`);
 
 // Define the questions to prompt the user
@@ -55,7 +55,7 @@ const questions = [
     message: 'Rate the book (1-5)',
     validate: 
       function(value) {
-        const isValid = /^(?:[1-5](?:\.5)?)$/.test(value);
+        const isValid = /^([1-4](\.\d+)?|5(\.0+)?)$/.test(value);
         if (isValid){
           return true;
         } else {
@@ -85,7 +85,7 @@ async function addBook() {
 
 // Function to view all books
 function viewAllBooks() {
-  db.all('SELECT * FROM books', (err, rows) => {
+  db.all('SELECT * FROM books ORDER BY author', (err, rows) => {
     if (err){
       console.error(err.message);
       return promptMainMenu()
