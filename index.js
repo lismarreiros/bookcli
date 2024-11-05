@@ -1,15 +1,22 @@
 import inquirer from "inquirer";
 import sqlite3 from "sqlite3";
 import chalk from "chalk";
+import keypress from "keypress";
 
-//create or open the database
+// initialize keyboard listener
+keypress(process.stdin);
+// detect Esc
+process.stdin.setRawMode(true);
+process.stdin.resume();
+
+// create or open the database
 const db = new sqlite3.Database('books.db', (err) => {
   if (err) {
     console.error(err.message);
   }
 });
 
-// Create the l table if it does not exist
+// Create the table if it does not exist
 db.run(`
   CREATE TABLE IF NOT EXISTS books (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -106,6 +113,21 @@ function viewAllBooks() {
 
 // Function to update a book
 function updateBook() {
+  const handleEsc = () => {
+    console.log(chalk.red.bold('Returning to the main menu...'));
+    process.stdin.removeListener('keypress', escListener);
+    promptMainMenu();
+  };
+  
+  const escListener = (ch, key) => {
+    if (key && key.name === 'escape') {
+      handleEsc();
+    }
+  }
+
+  // add esc listener
+  process.stdin.on('keypress', escListener);
+
   inquirer.prompt([
     //Enter ID of book to update
     {
@@ -164,9 +186,13 @@ function updateBook() {
             promptMainMenu();
           }
         );
+      }).finally(() => {
+        process.stdin.removeListener('keypress', escListener);
       });
     });
-  });
+  }).catch(() => {
+    process.stdin.removeListener('keypress', escListener)
+  })
 };
 
 function deleteBook() {
@@ -234,6 +260,7 @@ function promptMainMenu() {
       case 'Exit':
         console.log(chalk.bgMagentaBright.bold('Thank you for using our software!'))
         db.close();
+        process.exit();
         break;
     }
   });
