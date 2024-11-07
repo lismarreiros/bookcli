@@ -5,9 +5,18 @@ import keypress from "keypress";
 
 // initialize keyboard listener
 keypress(process.stdin);
-// detect Esc
 process.stdin.setRawMode(true);
 process.stdin.resume();
+
+function addEscListener(callback) {
+  const escListener = (ch, key) => {
+    if (key && key.name === 'escape') {
+      process.stdin.removeListener('keypress', escListener);
+      callback(); 
+    }
+  }
+  process.stdin.on('keypress', escListener);
+}
 
 // create or open the database
 const db = new sqlite3.Database('books.db', (err) => {
@@ -73,6 +82,11 @@ const questions = [
 ]
 
 async function addBook() {
+  addEscListener(() => {
+    console.log(chalk.red.bold('Returning to the main menu...'));
+    promptMainMenu();
+  });
+
   console.log(chalk.blue.bold('Welcome to your private bookapp!'));
   const answers = await inquirer.prompt(questions);
   const name =  answers.name;
@@ -113,20 +127,10 @@ function viewAllBooks() {
 
 // Function to update a book
 function updateBook() {
-  const handleEsc = () => {
+  addEscListener(() => {
     console.log(chalk.red.bold('Returning to the main menu...'));
-    process.stdin.removeListener('keypress', escListener);
     promptMainMenu();
-  };
-  
-  const escListener = (ch, key) => {
-    if (key && key.name === 'escape') {
-      handleEsc();
-    }
-  }
-
-  // add esc listener
-  process.stdin.on('keypress', escListener);
+  });
 
   inquirer.prompt([
     //Enter ID of book to update
@@ -196,6 +200,11 @@ function updateBook() {
 };
 
 function deleteBook() {
+  addEscListener(() => {
+    console.log(chalk.red.bold('Returning to the main menu...'));
+    promptMainMenu();
+  });
+
   inquirer.prompt([
     {
       type: 'input',
@@ -261,7 +270,6 @@ function promptMainMenu() {
         console.log(chalk.bgMagentaBright.bold('Thank you for using our software!'))
         db.close();
         process.exit();
-        break;
     }
   });
 } 
