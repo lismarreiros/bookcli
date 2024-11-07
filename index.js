@@ -9,7 +9,7 @@ const db = new sqlite3.Database('books.db', (err) => {
   }
 });
 
-// Create the l table if it does not exist
+// Create the table if it does not exist
 db.run(`
   CREATE TABLE IF NOT EXISTS books (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -20,41 +20,31 @@ db.run(`
 
 // Define the questions to prompt the user
 const questions = [
-  //name of the user
   {
     type: 'input',
     name: 'name',
-    message: 'What book you read?',
+    message: 'What book you read? (q to exit)',
     validate: 
       function(value) {
-        if (value.length){
-          return true;
-        } else {
-        return 'Please enter a name.';
-        }
+        return value.toLowerCase() === "q" || value.length ? true : 'Please enter a name.'
       },
   },
-  //author
   {
     type: 'input',
     name: 'author',
-    message: 'Name of the author?',
+    message: 'Name of the author? (q to exit)',
     validate: 
       function(value) {
-        if (value.length){
-          return true;
-        } else {
-        return 'Please enter a name.';
-        }
+        return value.toLowerCase() === "q" || value.length ? true : 'Please enter a name.'
       },
   },
-  // stars
   {
     type: 'input',
     name: 'stars',
-    message: 'Rate the book (1-5)',
+    message: 'Rate the book (1-5) (q to exit)',
     validate: 
       function(value) {
+        if (value.toLowerCase() === "q") return true;
         const isValid = /^([1-4](\.\d+)?|5(\.0+)?)$/.test(value);
         if (isValid){
           return true;
@@ -71,6 +61,10 @@ async function addBook() {
   const name =  answers.name;
   const author = answers.author
   const stars =  parseInt(answers.stars);
+  
+  if (answers.name.toLowerCase() === "q" || answers.author.toLowerCase === "q" || answers.stars.toLowerCase() === "q") {
+    return promptMainMenu();
+  }
 
   db.run(
     'INSERT INTO books (name, author, stars) VALUES (?,?,?)',
@@ -111,12 +105,16 @@ function updateBook() {
     {
       input: 'input',
       name: 'id',
-      message: 'Enter the ID of the book you want to update:',
+      message: 'Enter the ID of the book you want to update: (q to exit)',
       validate: function (value) {
-        return /^\d+$/.test(value) ? true : 'Please enter a valid ID number'
+        return value.toLowerCase() === "q"|| /^\d+$/.test(value) ? true : 'Please enter a valid ID number'
       },            
     }
   ]).then((idChoice) => {
+    if (idChoice.id.toLowerCase() === "q") {
+      return promptMainMenu()
+    }
+
     const id = parseInt(idChoice.id);
     db.get('SELECT * FROM books WHERE id = ?', [id], (err, book) => {
       if (err) {
@@ -174,14 +172,18 @@ function deleteBook() {
     {
       type: 'input',
       name: 'id',
-      message: 'Enter the ID of the book you want to delete:',
+      message: 'Enter the ID of the book you want to delete: (q to exit)',
       validate: function (value) {
-        return /^\d+$/.test(value) ? true : 'Please enter a valid ID number';
+        return value.toLowerCase() === "q" || /^\d+$/.test(value) ? true : 'Please enter a valid ID number';
       },  
     }
-  ]).then((idChoice) => {
+  ]).then((idChoice) => {  
+    if (idChoice.id.toLowerCase() === "q") {
+      return promptMainMenu();
+    };
+
     const id = parseInt(idChoice.id);
-    
+   
     // Check if the book exists before attempting to delete
     db.get('SELECT * FROM books WHERE id = ?', [id], (err, row) => {
       if (err) {
@@ -232,7 +234,7 @@ function promptMainMenu() {
         deleteBook();
         break;
       case 'Exit':
-        console.log(chalk.bgMagentaBright.bold('Thank you for using our software!'))
+        console.log(chalk.bgMagentaBright.bold('Bye, happy reading!'))
         db.close();
         break;
     }
