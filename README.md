@@ -16,7 +16,7 @@ the reading history.
 🚀 Getting Started
 
 ### Installation
-	git clone https://github.com/yourusername/book-tracker-cli.git
+	git clone https://github.com/lismarreiros/book-tracker-cli.git
 
 ### Navigate to the project folder:
 	cd book-tracker-cli
